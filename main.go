@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -11,14 +10,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var (
-	name        = flag.String("name", "", "Name of repo to create in authenticated user's GitHub account.")
-	description = flag.String("description", "", "Description of created repo.")
-	private     = flag.Bool("private", false, "Will created repo be private.")
-)
-
 func main() {
-	flag.Parse()
 	token := os.Getenv("GITHUB_AUTH_TOKEN")
 	if token == "" {
 		log.Fatal("Unauthorized: No token present")
