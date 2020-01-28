@@ -20,19 +20,48 @@ func main() {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
+	// Get all repos for the org.
+	// repoOpts := github.RepositoryListByOrgOptions{
+	// 	ListOptions: github.ListOptions{
+	// 		PerPage: 200,
+	// 	},
+	// }
+	// repos, _, err := client.Repositories.ListByOrg(ctx, "pulumi", &repoOpts)
+	// if err != nil {
+	// 	log.Panicf("error getting repos: %v", err)
+	// }
+
+	repos := []string{
+		"pulumi-service",
+		"pulumi",
+		"pulumi-policy",
+		"home",
+		"docs",
+		"pulumi-policy-aws",
+		"pulumi-az-pipelines-task",
+		"marketing",
+		"customer-support",
+	}
+
 	var sumPoints int
 	fmt.Printf("\n\nISSUES - POINTS\n")
 
-	opts := &github.IssueListOptions{
-		Filter: "all",
-		Labels: []string{"20Q1-svc"},
+	for _, repo := range repos {
+		opts := &github.IssueListByRepoOptions{
+			Assignee: "*",
+			Labels:   []string{"20Q1-svc"},
+		}
+		issues, _, err := client.Issues.ListByRepo(ctx, "pulumi", repo, opts)
+		if err != nil {
+			log.Panicf("error getting issues: %v", err)
+		}
+		for _, i := range issues {
+			sizePoints := getSizeValue(i)
+			sumPoints += sizePoints
+			fmt.Printf("%s - %d\n", i.GetTitle(), sizePoints)
+		}
 	}
-	issues, _, _ := client.Issues.ListByOrg(ctx, "pulumi", opts)
-	for _, i := range issues {
-		sizePoints := getSizeValue(i)
-		sumPoints += sizePoints
-		fmt.Printf("%s - %d\n", i.GetTitle(), sizePoints)
-	}
+
 	fmt.Printf("\n\nTOTAL SUM: %d\n", sumPoints)
 	fmt.Printf("AVG PER MILESTONE: %d\n", sumPoints/3.0)
 }
