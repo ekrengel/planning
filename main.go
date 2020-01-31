@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -10,26 +11,34 @@ import (
 	"golang.org/x/oauth2"
 )
 
+var (
+	flagGitHubOrganization = flag.String("org", "default", "GitHub organization to scan.")
+	flagGitHubLabel        = flag.String("label", "default", "GitHub label marking all issues to be included.")
+)
+
 func main() {
+	flag.Parse()
+
 	token := os.Getenv("GITHUB_AUTH_TOKEN")
 	if token == "" {
 		log.Fatal("Unauthorized: No token present")
 	}
+
+	if flagGitHubOrganization == nil || *flagGitHubOrganization == "" {
+		log.Fatal("Error: Required --org flag not proided.")
+	}
+	if flagGitHubLabel == nil || *flagGitHubLabel == "" {
+		log.Fatalf("Error: Required --label flag not provided.")
+	}
+
+	log.Printf(
+		"Scanning GitHub organization %q and all issues labeled %q...",
+		*flagGitHubOrganization, *flagGitHubLabel)
+
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
-
-	// Get all repos for the org.
-	// repoOpts := github.RepositoryListByOrgOptions{
-	// 	ListOptions: github.ListOptions{
-	// 		PerPage: 200,
-	// 	},
-	// }
-	// repos, _, err := client.Repositories.ListByOrg(ctx, "pulumi", &repoOpts)
-	// if err != nil {
-	// 	log.Panicf("error getting repos: %v", err)
-	// }
 
 	repos := []string{
 		"pulumi-service",
@@ -49,9 +58,9 @@ func main() {
 	for _, repo := range repos {
 		opts := &github.IssueListByRepoOptions{
 			Assignee: "*",
-			Labels:   []string{"20Q1-svc"},
+			Labels:   []string{*flagGitHubLabel},
 		}
-		issues, _, err := client.Issues.ListByRepo(ctx, "pulumi", repo, opts)
+		issues, _, err := client.Issues.ListByRepo(ctx, *flagGitHubOrganization, repo, opts)
 		if err != nil {
 			log.Panicf("error getting issues: %v", err)
 		}
@@ -60,6 +69,7 @@ func main() {
 			sumPoints += sizePoints
 			fmt.Printf("%s - %d\n", i.GetTitle(), sizePoints)
 		}
+
 	}
 
 	fmt.Printf("\n\nTOTAL SUM: %d\n", sumPoints)
@@ -69,11 +79,11 @@ func main() {
 func getSizeValue(issue *github.Issue) int {
 	for _, l := range issue.Labels {
 		switch size := l.GetName(); size {
-		case "size-s":
+		case "size-s", "size/S":
 			return 1
-		case "size-m":
+		case "size-m", "size/M":
 			return 5
-		case "size-l":
+		case "size-l", "size/L":
 			return 10
 		default:
 			continue
