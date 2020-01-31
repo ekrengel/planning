@@ -83,13 +83,13 @@ func main() {
 
 			var assigneeStr string
 			if assignee := i.GetAssignee(); assignee != nil {
-				assigneeStr = assignee.GetName()
+				assigneeStr = assignee.GetLogin()
 			}
 
 			t.AppendRow([]interface{}{i.GetTitle(), milestoneStr, assigneeStr, points, i.GetHTMLURL()})
 		}
 
-		// Fecth the next page of results as needed.
+		// Fetch the next page of results as needed.
 		if resp.NextPage == 0 {
 			break
 		}
