@@ -40,18 +40,6 @@ func main() {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
-	// repos := []string{
-	// 	"pulumi-service",
-	// 	"pulumi",
-	// 	"pulumi-policy",
-	// 	"home",
-	// 	"docs",
-	// 	"pulumi-policy-aws",
-	// 	"pulumi-az-pipelines-task",
-	// 	"marketing",
-	// 	"customer-support",
-	// }
-
 	var sumPoints int
 	// https://developer.github.com/v3/issues/#list-issues
 	opts := &github.IssueListOptions{
